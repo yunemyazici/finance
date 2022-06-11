@@ -86,23 +86,24 @@ def buy():
             portfolio_list.append(i["symbol"])
         balance = db.execute("SELECT cash FROM users WHERE id=?",user_id)[0]["cash"]
         shares=int(request.form.get("shares"))
+        print("love pussies")
         if stock_info["symbol"] not in portfolio_list:
-            if (stock_info["price"]*shares)<balance[0]["cash"]:
+            if (stock_info["price"]*shares)<balance:
                 dt=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 db.execute("INSERT INTO stocks (id,symbol,shares) VALUES(?,?,?)",user_id,symbol,str(shares))
-                balance = balance[0] - (stock_info["price"])*shares
-                db.execute("UPDATE users SET cash=? WHERE id=?",balance[0]["cash"],session["user_id"])
+                balance = balance - (stock_info["price"])*shares
+                db.execute("UPDATE users SET cash=? WHERE id=?",balance,session["user_id"])
                 db.execute("INSERT INTO history (id,symbol,shares,price,time) VALUES(?,?,?,?,?)",user_id,symbol,str(shares),stock_info["price"],dt)
                 return redirect("/")
             return apology("can't afford", 403)
         else:
             share = shares
             shares += db.execute("SELECT shares FROM stocks WHERE id=?",user_id)[0]["shares"]
-            if (stock_info["price"]*share)<balance[0]["cash"]:
+            if (stock_info["price"]*share)<balance:
                 dt=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 db.execute("UPDATE stocks SET shares=? WHERE symbol=? AND id=?",str(shares),stock_info["symbol"],session["user_id"])
-                balance[0]["cash"] = balance[0]["cash"] - (stock_info["price"])* share
-                db.execute("UPDATE users SET cash=? WHERE id=?",balance[0]["cash"],session["user_id"])
+                balance = balance - (stock_info["price"])* share
+                db.execute("UPDATE users SET cash=? WHERE id=?",balance,session["user_id"])
                 db.execute("INSERT INTO history (id,symbol,shares,price,time) VALUES(?,?,?,?,?)",user_id,symbol,str(share),stock_info["price"],dt)
                 return redirect("/")
             return apology("can't afford", 403)
@@ -295,7 +296,6 @@ def account():
             return apology("passwords don't match", 403)
         elif not  check_password_hash(rows[0]["hash"], request.form.get("password")):
             return apology("wrong password", 403)
-        #şimdiki şifrelerin eşleşmesini de kontrol etmem gerekiyor
 
         hash = generate_password_hash(request.form.get("new_password"))
 
@@ -305,5 +305,3 @@ def account():
         return redirect("/")
 
 
-
-#aynı username ile hesap açımını engelle
